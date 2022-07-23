@@ -1,0 +1,16 @@
+name: Github Action Build PKGBUILD
+on: push
+jobs:
+  build_for_arch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build linux-xanmod-rt-uksm-cjktty for arch
+        uses: mora-unie-youer/build-aur-action@master
+        with:
+          repo-name: linux-xanmod-rt-uksm-cjktty
+      - uses: ncipollo/release-action@v1.10.0
+        with:
+          allowUpdates: true
+          tag: "linux-xanmod-rt-uksm-cjktty_v5.15.44-1"
+          artifacts: "./*/*.zst"
+          token: ${{ secrets.GITHUB_TOKEN }}
