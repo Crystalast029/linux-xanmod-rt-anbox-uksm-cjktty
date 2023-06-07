@@ -34,12 +34,12 @@ fi
 ## Set variable "use_tracers" to: n to disable (possibly increase performance)
 ##                                y to enable  (stock default)
 if [ -z ${use_tracers+x} ]; then
-  use_tracers=n
+  use_tracers=y
 fi
 
-## Choose between GCC and CLANG config (default is CLANG)
+## Choose between GCC and CLANG config (default is GCC)
 if [ -z ${_compiler+x} ]; then
-  _compiler=clang
+  _compiler=gcc
 fi
 
 # Compress modules with ZSTD (to save disk space)
@@ -70,7 +70,7 @@ fi
 
 # cpufreq gov (available:performance,ondemand,conservative,userspace,schedutil,powersave)
 if [ -z ${_cpufreq+x} ]; then
-  _cpufreq=performance
+  _cpufreq=schedutill
 fi
 
 # LRU setting
@@ -102,7 +102,7 @@ fi
 
 ### IMPORTANT: Do no edit below this line unless you know what you're doing
 
-pkgbase=linux-xanmod-rt-uksm-cjktty
+pkgbase=linux-xanmod-rt-anbox-uksm-cjktty
 _major=5.15
 pkgver=${_major}.44
 _branch=5.x
@@ -117,7 +117,7 @@ license=(GPL2)
 makedepends=(
   bc cpio kmod libelf perl tar xz
 )
-_patches_url="https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/${_major}"
+#_patches_url="https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/${_major}"
 _jobs=$(nproc)
 _core=$(nproc --all)
 if [ "${_compiler}" = "clang" ]; then
@@ -131,7 +131,7 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v${_branch}/linux-${_major}.tar
         "https://github.com/xanmod/linux/releases/download/${pkgver}-rt${_rt}-xanmod${xanmod}/patch-${pkgver}-rt${_rt}-xanmod${xanmod}.xz"
         choose-gcc-optimization.sh
         "0001-cjktty.patch::https://raw.githubusercontent.com/zhmars/cjktty-patches/master/v${_branch}/cjktty-${_major}.patch"
-        "0002-UKSM.patch::${_patches_url}/uksm-patches/0001-UKSM-for-${_major}.patch"
+        "0002-UKSM.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v${_branch}/uksm-${_major}.patch"
        )
 validpgpkeys=(
     'ABAF11C65A2970B130ABE3C479BE3E4300411886' # Linux Torvalds
@@ -151,7 +151,7 @@ sha256sums=('57b2cf6991910e3b67a1b3490022e8a0674b6965c74c12da1e99d138d1991ee8'
             '58e256083b32c48ca2757af04b2398c6d94f5feeb25c3a41aaa7d51a041b5778'
             '1ac18cad2578df4a70f9346f7c6fccbb62f042a0ee0594817fdef9f2704904ee'
             '97a525e28a270c5e6e5a4fc4ab4920c42ceef2f9921857497ab3c56ec343803e'
-            'cb348cc3ba1a453ac6057ecc08000a2ccddc47b70491caaf71db34a3d630f77c')
+            '7323d58e79dee3bd79431db134afb49e6024f0f63f821eebacf04d3c9d7645da')
 
 export KBUILD_BUILD_HOST=${KBUILD_BUILD_HOST:-archlinux}
 export KBUILD_BUILD_USER=${KBUILD_BUILD_USER:-makepkg}
@@ -208,6 +208,13 @@ prepare() {
       scripts/config --enable CONFIG_LTO_NONE
     fi
   fi
+
+  # Enable binderfs and ashmem for anbox and waydroid
+  scripts/config --enable CONFIG_ANDROID
+  scripts/config --enable CONFIG_ASHMEM
+  scripts/config --enable CONFIG_ANDROID_BINDER_IPC
+  scripts/config --enable CONFIG_ANDROID_BINDERFS
+  scripts/config --set-str CONFIG_ANDROID_BINDER_DEVICES "binder,hwbinder,vndbinder"
 
   # CONFIG_STACK_VALIDATION gives better stack traces. Also is enabled in all official kernel packages by Archlinux team
   scripts/config --enable CONFIG_STACK_VALIDATION
